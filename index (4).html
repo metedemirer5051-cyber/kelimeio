@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akademik Kelime Testi (Full 3-Phase Suite)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .phase-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #e67e22;
+            margin-bottom: 20px;
+            padding: 8px;
+            background-color: #fdf2e9;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .word-box {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #2980b9;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #eaf2f8;
+            border-radius: 8px;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn-option {
+            background-color: #fff;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .btn-option:hover {
+            background-color: #f8f9fa;
+            border-color: #3498db;
+        }
+        .btn-option.correct {
+            background-color: #2ecc71 !important;
+            color: white;
+            border-color: #27ae60;
+        }
+        .btn-option.wrong {
+            background-color: #e74c3c !important;
+            color: white;
+            border-color: #c0392b;
+        }
+        .feedback {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 24px;
+        }
+        .btn-next {
+            display: block;
+            width: 100%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+        .btn-next:hover {
+            background-color: #2980b9;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .level-badge {
+            font-size: 12px;
+            background-color: #e67e22;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .transition-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            z-index: 10;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Akademik Kelime Testi</h2>
+    <div id="phase-title" class="phase-title">Bölüm 1: Türkçe Anlam Eşleştirme</div>
+    
+    <div id="game-zone">
+        <div class="stats">
+            <span id="remaining-count">Kalan Kelime: Yükleniyor...</span>
+            <span id="word-streak">Seri: 0/2</span>
+        </div>
+
+        <div class="word-box">
+            <div id="current-word">WORD</div>
+            <div><span id="level-tag" class="level-badge">A1</span></div>
+        </div>
+
+        <div class="options-container" id="options">
+            <!-- Şıklar dinamik yüklenir -->
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+        <button id="next-btn" class="btn-next hidden" onclick="nextQuestion()">Sonraki Soru</button>
+    </div>
+
+    <!-- Dinamik Geçiş Ekranı -->
+    <div id="transition-zone" class="transition-overlay hidden">
+        <h3 id="trans-title" style="color: #2980b9; font-size: 24px; text-align: center;">Harika Gelişim! 🚀</h3>
+        <p id="trans-desc" style="text-align: center; line-height: 1.6; margin-bottom: 20px;">Aşama tamamlandı.</p>
+        <button id="trans-btn" class="btn-next" style="width: 80%;" onclick="proceedToNextPhase()">Sonraki Bölüme Geç</button>
+    </div>
+
+    <!-- Final Kazanma Ekranı -->
+    <div id="win-zone" class="hidden" style="text-align: center; margin-top: 40px;">
+        <h3 style="color: #2ecc71; font-size: 26px;">Muazzam Başarı! 🎉🏆</h3>
+        <p style="line-height: 1.6;">Tüm akademik kelimelerin <b>Türkçe anlamlarını</b>, <b>İngilizce eş anlamlılarını</b> ve <b>cümle içi kullanımlarını</b> eksiksiz öğrenerek listeyi tamamladın!</p>
+        <button class="btn-next" onclick="location.reload()">Yeniden Başla</button>
+    </div>
+</div>
+
+<script>
+    const rawWords = [
+        // --- A1 ---
+        { word: "Enjoy", level: "A1", meaning: "Keyif almak, tadını çıkarmak", synonym: "Like / Appreciate", sentence: "Students ___ participating in interactive academic seminars." },
+        { word: "Key", level: "A1", meaning: "Anahtar / Temel, en önemli", synonym: "Main / Crucial", sentence: "Education is a ___ factor in global social mobility." },
+        { word: "Local", level: "A1", meaning: "Yerel, yerli", synonym: "Regional", sentence: "The study examines the structural impact on the ___ economy." },
+        { word: "Negative", level: "A1", meaning: "Olumsuz, negatif", synonym: "Bad / Harmful", sentence: "The long-term experiment unfortunately yielded a ___ result." },
+        { word: "Positive", level: "A1", meaning: "Olumlu, pozitif", synonym: "Good / Beneficial", sentence: "We observed a ___ correlation between the two key variables." },
+
+        // --- A2 ---
+        { word: "Behavior (Behaviour)", level: "A2", meaning: "Davranış", synonym: "Conduct / Actions", sentence: "Psychologists carefully studied the social ___ of the primates." },
+        { word: "Burn", level: "A2", meaning: "Yanmak, yakmak", synonym: "Destroy by fire", sentence: "Fossil fuels ___ to generate energy for heavy industries." },
+        { word: "Celebrity", level: "A2", meaning: "Ünlü kişi, şöhret", synonym: "Star / Famous person", sentence: "The mainstream media often focuses heavily on ___ culture." },
+        { word: "Character", level: "A2", meaning: "Karakter, kişilik", synonym: "Personality", sentence: "The main ___ in the complex novel faces intense internal conflicts." },
+        { word: "Clever", level: "A2", meaning: "Zeki, akıllı", synonym: "Smart / Intelligent", sentence: "She designed a ___ solution to the complex engineering problem." },
+        { word: "Cycle", level: "A2", meaning: "Döngü / Bisiklete binmek", synonym: "Loop / Ride", sentence: "The macro economic ___ includes periods of sudden growth and recession." },
+        { word: "Degree", level: "A2", meaning: "Derece / Üniversite diploması", synonym: "Level / Diploma", sentence: "He successfully earned a master's ___ in aerospace engineering." },
+        { word: "Disappear", level: "A2", meaning: "Gözden kaybolmak", synonym: "Vanish / Go away", sentence: "Certain rare species might ___ if their habitats are fully destroyed." },
+        { word: "Discover", level: "A2", meaning: "Keşfetmek", synonym: "Find / Realize", sentence: "Biologists hope to ___ an effective cure for the disease." },
+        { word: "Error", level: "A2", meaning: "Hata, kusur", synonym: "Mistake / Fault", sentence: "A minor ___ in the algorithm caused the massive system crash." },
+        { word: "Expert", level: "A2", meaning: "Uzman", synonym: "Specialist / Professional", sentence: "The ministry consulted a leading ___ in public health policies." },
+        { word: "Fair", level: "A2", meaning: "Adil, dürüst / Fuar", synonym: "Just / Equal", sentence: "The newly designed structure ensures a ___ trial for everyone." },
+        { word: "Feature", level: "A2", meaning: "Özellik, nitelik", synonym: "Characteristic / Quality", sentence: "An important ___ of this new material is its structural durability." },
+        { word: "Fresh", level: "A2", meaning: "Taze, yeni", synonym: "New / Clean", sentence: "The analyst provided a ___ perspective on the shifting market trend." },
+        { word: "Give up", level: "A2", meaning: "Bırakmak, vazgeçmek", synonym: "Quit / Stop trying", sentence: "True researchers never ___ when facing difficult academic challenges." },
+        { word: "Invention", level: "A2", meaning: "İcat, buluş", synonym: "Creation / Discovery", sentence: "The historical ___ of the printing press changed modern history." },
+        { word: "Material", level: "A2", meaning: "Malzeme, materyal", synonym: "Substance / Matter", sentence: "The researchers gathered raw ___ for the construction project." },
+        { word: "Price", level: "A2", meaning: "Fiyat, bedel", synonym: "Cost / Value", sentence: "The market ___ of oil fluctuates constantly based on global demand." },
+        { word: "Research", level: "A2", meaning: "Araştırma, araştırmak", synonym: "Study / Investigate", sentence: "Rigorous academic ___ requires a strict and highly objective methodology." },
+        { word: "Season", level: "A2", meaning: "Mevsim / Sezon", synonym: "Time of year / Period", sentence: "The rainy ___ regularly affects agricultural production patterns." },
+        { word: "Taste", level: "A2", meaning: "Tat, lezzet / Tatmak", synonym: "Flavor / Try", sentence: "Cultured individuals often develop a highly sophisticated ___ in art." },
+
+        // --- B1 ---
+        { word: "Alternative", level: "B1", meaning: "Alternatif, seçenek", synonym: "Option / Choice", sentence: "Renewable energy provides a clean ___ to volatile fossil fuels." },
+        { word: "Analyze", level: "B1", meaning: "Analiz etmek, incelemek", synonym: "Examine / Study", sentence: "Data analysts ___ current trends to predict future market shifts." },
+        { word: "Award", level: "B1", meaning: "Ödül", synonym: "Prize / Reward", sentence: "The distinguished professor received an ___ for outstanding research." },
+        { word: "Be supposed to", level: "B1", meaning: "-mesi gerekmek, beklenmek", synonym: "Be expected to", sentence: "Undergraduates ___ submit their essays by Friday afternoon." },
+        { word: "Briefly", level: "B1", meaning: "Kısaca, özetle", synonym: "Shortly / In summary", sentence: "The abstract ___ summarizes the main arguments of the paper." },
+        { word: "Claim", level: "B1", meaning: "İddia etmek / İddia", synonym: "Declare / State", sentence: "The authors confidently ___ that their method is highly efficient." },
+        { word: "Concentrate", level: "B1", meaning: "Konsantre olmak, odaklanmak", synonym: "Focus / Pay attention", sentence: "It is structurally hard to ___ in a noisy library environment." },
+        { word: "Consume", level: "B1", meaning: "Tüketmek", synonym: "Eat / Use up", sentence: "Modern industries regularly ___ vast amounts of electrical energy." },
+        { word: "Convincing", level: "B1", meaning: "İkna edici, inandırıcı", synonym: "Believable / Persuasive", sentence: "The expert lawyer presented a ___ argument to the grand jury." },
+        { word: "Describe", level: "B1", meaning: "Tanımlamak, betimlemek", synonym: "Explain / Detail", sentence: "Participants were explicitly asked to ___ their experiences in detail." },
+        { word: "Development", level: "B1", meaning: "Gelişim, ilerleme", synonym: "Growth / Progress", sentence: "Sustainable economic ___ is crucial for reducing poverty levels." },
+        { word: "Discount", level: "B1", meaning: "İndirim", synonym: "Price reduction", sentence: "The digital store offered a special ___ to verify student accounts." },
+        { word: "Disrupt", level: "B1", meaning: "Düzenini bozmak, aksatmak", synonym: "Interrupt / Disturb", sentence: "Technical infrastructure issues can easily ___ the online learning process." },
+        { word: "Distance learning", level: "B1", meaning: "Uzaktan eğitim", synonym: "Online education", sentence: "Many busy working professionals heavily prefer ___ options." },
+        { word: "Durable", level: "B1", meaning: "Dayanıklı, uzun ömürlü", synonym: "Long-lasting / Strong", sentence: "The newly engineered alloy is highly ___ and heat-resistant." },
+        { word: "Effective", level: "B1", meaning: "Etkili, başarılı", synonym: "Successful / Working well", sentence: "Vaccines remain an exceptionally ___ tool against infectious diseases." },
+        { word: "Encourage", level: "B1", meaning: "Cesaretlendirmek, teşvik etmek", synonym: "Support / Motivate", sentence: "Academic mentors always ___ students to pursue their higher goals." },
+        { word: "Ensure", level: "B1", meaning: "Garantiye almak, sağlama almak", synonym: "Make sure / Guarantee", sentence: "Please double-check the data to ___ absolute accuracy in your report." },
+        { word: "Eventually", level: "B1", meaning: "Er ya da geç, sonunda", synonym: "Finally / In the end", sentence: "With continuous effort, you will ___ master complex English grammar." },
+        { word: "Exhausted", level: "B1", meaning: "Çok yorgun, bitkin", synonym: "Very tired", sentence: "After finishing the intensive research marathon, the team felt completely ___." },
+        { word: "Explore", level: "B1", meaning: "Keşfetmek, araştırmak", synonym: "Investigate / Look around", sentence: "The academic thesis aims to fully ___ the core causes of inflation." },
+        { word: "Familiar", level: "B1", meaning: "Tanıdık, aşina", synonym: "Known / Common", sentence: "Are you fully ___ with the core principles of thermodynamics?" },
+        { word: "Financial", level: "B1", meaning: "Finansal, mali", synonym: "Economic / Monetary", sentence: "The organization required urgent ___ support to avoid sudden bankruptcy." },
+        { word: "Get used to", level: "B1", meaning: "Alışmak", synonym: "Become accustomed to", sentence: "International students must quickly ___ a completely new culture." },
+        { word: "Give in", level: "B1", meaning: "Teslim olmak, boyun eğmek", synonym: "Surrender / Yield", sentence: "Determined negotiators refuse to ___ to unreasonable corporate demands." },
+        { word: "Growth", level: "B1", meaning: "Büyüme, gelişme", synonym: "Increase / Development", sentence: "The country experienced rapid technological ___ over the last fiscal year." },
+        { word: "Highlight", level: "B1", meaning: "Vurgulamak, dikkat çekmek", synonym: "Emphasize / Stress", sentence: "The comprehensive report seeks to ___ the extreme importance of innovation." },
+        { word: "Immediate", level: "B1", meaning: "Hemen olan, acil", synonym: "Instant / Urgent", sentence: "The critical patient requires ___ medical attention following the accident." },
+        { word: "Incredibly", level: "B1", meaning: "İnanılmaz derecede", synonym: "Unbelievably / Extremely", sentence: "The regional defense technology sector has grown ___ fast." },
+        { word: "Influence", level: "B1", meaning: "Etki, etkilemek", synonym: "Effect / Impact", sentence: "Algorithmic social media can deeply ___ public opinion during elections." },
+        { word: "Inspiration", level: "B1", meaning: "İlham, esin", synonym: "Motivation / Creative idea", sentence: "Nature is traditionally a great source of ___ for organic architects." },
+        { word: "Investigate", level: "B1", meaning: "Soruşturmak, araştırmak", synonym: "Examine / Look into", sentence: "The federal police will closely ___ the structural causes of the incident." },
+        { word: "Leisure", level: "B1", meaning: "Boş zaman, serbest zaman", synonym: "Free time / Relaxation", sentence: "Balancing workplace duties and ___ is essential for sustainable mental health." },
+        { word: "Locate", level: "B1", meaning: "Yerini belirlemek, yerleştirmek", synonym: "Find / Place", sentence: "Advanced GPS technology makes it easy to ___ autonomous vehicles remotely." },
+        { word: "Mystery", level: "B1", meaning: "Gizem, sır", synonym: "Secret / Puzzle", sentence: "The exact origin of the ancient archeological artifact remains a ___." },
+        { word: "Online degree", level: "B1", meaning: "Çevrimiçi üniversite diploması", synonym: "Internet-based diploma", sentence: "An accredited ___ offers incredible flexibility for employed students." },
+        { word: "Painful", level: "B1", meaning: "Acı verici, ağrılı", synonym: "Hurting / Sore", sentence: "Macroeconomic reforms can be a ___ but necessary developmental process." },
+        { word: "Pleasure", level: "B1", meaning: "Zevk, memnuniyet", synonym: "Enjoyment / Happiness", sentence: "Reading high-quality classical literature brings great intellectual ___." },
+        { word: "Predictable", level: "B1", meaning: "Öngörülebilir", synonym: "Expected / Foreseeable", sentence: "Global weather patterns became more ___ with advanced satellite clusters." },
+        { word: "Previous", level: "B1", meaning: "Önceki, geçmiş", synonym: "Earlier / Past", sentence: "This empirical study directly builds upon results from a ___ experiment." },
+        { word: "Program", level: "B1", meaning: "Program", synonym: "Plan / Schedule", sentence: "The engineering university offers a rigorous master's ___ in AI systems." },
+        { word: "Promotion", level: "B1", meaning: "Terfi / Tanıtım", synonym: "Advancement / Advertisement", sentence: "Sustained hard work earned her a rapid ___ to senior technical director." },
+        { word: "Quit", level: "B1", meaning: "Bırakmak, çıkmak", synonym: "Stop / Leave", sentence: "He decided to ___ his corporate job to fully focus on academic research." },
+        { word: "Rare", level: "B1", meaning: "Nadir, ender", synonym: "Uncommon / Scarce", sentence: "Finding a perfectly preserved deep-sea fossil is an exceptionally ___ event." },
+        { word: "Reduction", level: "B1", meaning: "Azalma, indirim", synonym: "Decrease / Cut", sentence: "A strict carbon tax leads directly to a ___ in greenhouse gas emissions." },
+        { word: "Regulate", level: "B1", meaning: "Düzenlemek, düzene sokmak", synonym: "Control / Manage", sentence: "Governments establish independent agencies to ___ financial institutions." },
+        { word: "Reject", level: "B1", meaning: "Reddetmek, geri çevirmek", synonym: "Refuse / Say no", sentence: "The international journal editors decided to ___ the poorly formatted manuscript." },
+        { word: "Reliable", level: "B1", meaning: "Güvenilir", synonym: "Trustworthy / Dependable", sentence: "Scientists require highly ___ instruments to collect accurate data points." },
+        { word: "Resource", level: "B1", meaning: "Kaynak", synonym: "Supply / Source", sentence: "Clean drinking water is a vital natural ___ that must be fiercely protected." },
+        { word: "Retire", level: "B1", meaning: "Emekli olmak", synonym: "Stop working (due to age)", sentence: "Emeritus professors often continue researching even after they officially ___." },
+        { word: "Revise", level: "B1", meaning: "Gözden geçirmek, tekrar etmek", synonym: "Review / Change", sentence: "You should carefully ___ your draft essay before the final academic submission." },
+        { word: "Risk", level: "B1", meaning: "Risk", synonym: "Danger / Threat", sentence: "Investing heavily in volatile tech stocks involves a high financial ___." },
+        { word: "Salary", level: "B1", meaning: "Maaş", synonym: "Pay / Income", sentence: "An engineer's entry-level ___ heavily depends on their specialized skills." },
+        { word: "Spicy", level: "B1", meaning: "Baharatlı, acı", synonym: "Hot (flavor)", sentence: "Some tropical cultures prefer highly ___ food in their traditional diets." },
+        { word: "Support", level: "B1", meaning: "Desteklemek / Destek", synonym: "Help / Back up", sentence: "Empirical data is fundamentally needed to ___ your scientific hypothesis." },
+        { word: "Temporary", level: "B1", meaning: "Geçici", synonym: "Short-term / Not permanent", sentence: "The sudden industrial economic downturn is expected to be only ___." },
+        { word: "Trend", level: "B1", meaning: "Akım, eğilim, trend", synonym: "Tendency / Fashion", sentence: "There is a massive growing ___ toward full automation in manufacturing." },
+        { word: "Uncomfortable", level: "B1", meaning: "Rahatsız, konforsuz", synonym: "Awkward / Painful", sentence: "Sitting for hours prevents an ___ posture if using ergonomic chairs." },
+        { word: "Unemployed", level: "B1", meaning: "İşsiz", synonym: "Jobless / Out of work", sentence: "The welfare system provides financial aid directly to ___ individuals." },
+        { word: "Wages", level: "B1", meaning: "Ücret, haftalık/saatlik maaş", synonym: "Earnings / Pay", sentence: "Minimum ___ should dynamically match the current rising cost of living." },
+        { word: "Worldwide", level: "B1", meaning: "Dünya çapında", synonym: "Global / International", sentence: "The unexpected global pandemic had a massive ___ macroeconomic impact." },
+
+        // --- B2 ---
+        { word: "Account for", level: "B2", meaning: "Oluşturmak / Açıklamak", synonym: "Explain / Make up", sentence: "High-tech defense exports ___ a large portion of the national budget." },
+        { word: "Acknowledge", level: "B2", meaning: "Kabul etmek, itiraf etmek", synonym: "Accept / Admit", sentence: "We must scientifically ___ the clear limitations of our current study." },
+        { word: "Adapt", level: "B2", meaning: "Uyum sağlamak, adapte olmak", synonym: "Adjust / Change", sentence: "Endemic species must quickly ___ to changing global climates to survive." },
+        { word: "Address", level: "B2", meaning: "Ele almak / Adres", synonym: "Deal with / Handle", sentence: "The keynote academic speaker will thoroughly ___ the issue of global warming." },
+        { word: "Assess", level: "B2", meaning: "Değerlendirmek, puanlamak", synonym: "Evaluate / Judge", sentence: "Tutors use rigorous oral exams to ___ the students' language proficiency." },
+        { word: "Associated with", level: "B2", meaning: "-ile ilişkili, bağlantılı", synonym: "Connected to / Linked to", sentence: "Chronic cardiovascular disease is often directly ___ a sedentary lifestyle." },
+        { word: "Association", level: "B2", meaning: "Dernek, bağ, ilişki", synonym: "Connection / Organization", sentence: "Sociological data shows a strong ___ between education levels and lifetime income." },
+        { word: "Assume", level: "B2", meaning: "Varsaymak, farz etmek", synonym: "Suppose / Think", sentence: "Do not blindly ___ the raw statistical results are correct without validation." },
+        { word: "Banal", level: "B2", meaning: "Basit, sıradan, klişe", synonym: "Boring / Ordinary", sentence: "The modern art critic dismissed the movie's plot as completely ___." },
+        { word: "Blame", level: "B2", meaning: "Suçlamak", synonym: "Accuse / Fault", sentence: "It is structurally unfair to ___ the entire engineering team for one error." },
+        { word: "Blind", level: "B2", meaning: "Kör / Görmezden gelmek", synonym: "Unseeing / Ignore", sentence: "A systematic double-___ study strictly prevents subjective bias in medical research." },
+        { word: "Capacity", level: "B2", meaning: "Kapasite", synonym: "Ability / Space", sentence: "The new engineering lab facility has a maximum working ___ of fifty researchers." },
+        { word: "Casualty", level: "B2", meaning: "Kazazede, kayıp", synonym: "Victim / Loss", sentence: "Fortunately, the emergency teams reported no civilian ___ in the area." },
+        { word: "Civilized", level: "B2", meaning: "Medeni, uygar", synonym: "Polite / Advanced", sentence: "A truly ___ global society deeply respects human rights and justice." },
+        { word: "Community", level: "B2", meaning: "Topluluk, cemiyet", synonym: "Society / Group", sentence: "The scientific ___ benefited immensely from the shared open-source code." },
+        { word: "Complicated", level: "B2", meaning: "Karmaşık", synonym: "Complex / Difficult", sentence: "The advanced mathematical proof was far too ___ for beginners." },
+        { word: "Compromise", level: "B2", meaning: "Uzlaşmak, ödün vermek", synonym: "Agree / Settle", sentence: "Reaching a diplomatic ___ is absolutely essential in international state negotiations." },
+        { word: "Concept", level: "B2", meaning: "Kavram", synonym: "Idea / Notion", sentence: "The theoretical ___ of artificial neural networks dates back many decades." },
+        { word: "Conduct", level: "B2", meaning: "Yürütmek (deney vb.)", synonym: "Do / Carry out", sentence: "The university research department will ___ a survey on student satisfaction." },
+        { word: "Conscious", level: "B2", meaning: "Bilinçli", synonym: "Aware / Awake", sentence: "Modern consumers are becoming far more ___ of environmental sustainability." },
+        { word: "Conservation", level: "B2", meaning: "Koruma, muhafaza etme", synonym: "Protection / Saving", sentence: "Strict forest ___ policies help effectively preserve biodiversity on Earth." },
+        { word: "Consultation", level: "B2", meaning: "Danışma, istişare", synonym: "Meeting / Discussion", sentence: "The experimental treatment requires a prior ___ with a specialized medical board." },
+        { word: "Contemporary", level: "B2", meaning: "Çağdaş, modern", synonym: "Modern / Current", sentence: "The cosmopolitan museum exhibits a wide collection of ___ structural art." },
+        { word: "Contract", level: "B2", meaning: "Sözleşme, kontrat", synonym: "Agreement / Deal", sentence: "The two technology parties signed a legally binding ___ yesterday morning." },
+        { word: "Controversial", level: "B2", meaning: "Tartışmalı", synonym: "Debatable / Argued", sentence: "The usage of advanced nuclear energy remains a highly ___ geopolitical topic." },
+        { word: "Cope", level: "B2", meaning: "Başa çıkmak, altından kalkmak", synonym: "Manage / Deal with", sentence: "Remote employees need adaptive strategies to ___ with heavy workplace stress." },
+        { word: "Crash", level: "B2", meaning: "Çarpmak / Çöküş", synonym: "Accident / Hit", sentence: "The severe operating system ___ caused an instant loss of unsaved database rows." },
+        { word: "Criterion", level: "B2", meaning: "Kriter, ölçüt", synonym: "Standard / Rule", sentence: "Structural fluency is a key ___ for passing the academic language exam." },
+        { word: "Criticize", level: "B2", meaning: "Eleştirmek", synonym: "Disapprove / Blame", sentence: "Senior scholars often ___ data-driven theories that lack structural empirical support." },
+        { word: "Decline", level: "B2", meaning: "Reddetmek / Azalmak", synonym: "Decrease / Refuse", sentence: "Economists observed a sharp, unexpected ___ in quarterly manufacturing profits." },
+        { word: "Demonstrate", level: "B2", meaning: "Göstermek, kanıtlamak", synonym: "Show / Prove", sentence: "The analytical charts clearly ___ the continuous growth of the aerospace firm." },
+        { word: "Depressing", level: "B2", meaning: "Depresif, kasvetli", synonym: "Sad / Gloomy", sentence: "The sociological documentary painted a ___ but realistic picture of rural poverty." },
+        { word: "Detectives", level: "B2", meaning: "Dedektifler", synonym: "Investigators / Police", sentence: "The highly seasoned ___ gathered forensic clues at the target scene." },
+        { word: "Devastating", level: "B2", meaning: "Yıkıcı, tahrip edici", synonym: "Destructive / Damaging", sentence: "The recent major earthquake had a ___ impact on coastal infrastructure." },
+        { word: "Diminish", level: "B2", meaning: "Azalmak, eksiltmek", synonym: "Decrease / Reduce", sentence: "Proper regular maintenance will effectively ___ the high risk of engine failure." },
+        { word: "Disability", level: "B2", meaning: "Engellilik, sakatlık", synonym: "Handicap / Illness", sentence: "The campus building was modified to improve access for researchers with a ___." },
+        { word: "Dub", level: "B2", meaning: "Dublaj yapmak", synonym: "Name / Voice-over", sentence: "International media networks often ___ foreign educational films into Turkish." },
+        { word: "Encounter", level: "B2", meaning: "Karşılaşmak, rastlamak", synonym: "Meet / Face", sentence: "Logistics lines may ___ unexpected structural delays during severe winter storms." },
+        { word: "Ethnic", level: "B2", meaning: "Etnik", synonym: "Cultural / National", sentence: "The metropolitan city is internationally known for its diverse ___ backgrounds." },
+        { word: "Evidence", level: "B2", meaning: "Kanıt, delil", synonym: "Proof / Sign", sentence: "There is currently no scientific ___ to support that medical hypothesis." },
+        { word: "Failure", level: "B2", meaning: "Başarısızlık", synonym: "Lack of success / Defeat", sentence: "The initial launch ___ was directly attributed to a faulty mechanical valve." },
+        { word: "Figure out", level: "B2", meaning: "Çözmek, anlamak", synonym: "Understand / Solve", sentence: "Software engineers are working around the clock to ___ why the server crashed." },
+        { word: "Form an impression", level: "B2", meaning: "İzlenim edinmek", synonym: "Get an idea / Judge", sentence: "Structured technical interviews help tech firms ___ of potential candidates." },
+        { word: "Found", level: "B2", meaning: "Kurmak / Temelini atmak", synonym: "Establish / Start", sentence: "The visionaries plan to ___ an independent tech research institute next year." },
+        { word: "Fund", level: "B2", meaning: "Fon sağlamak / Sermaye", synonym: "Finance / Money", sentence: "The national committee decided to fully ___ the renewable energy initiative." },
+        { word: "Genius", level: "B2", meaning: "Deha, dahi", synonym: "Intelligent / Brilliant", sentence: "The theoretical physicist was globally recognized as a mathematical ___." },
+        { word: "Identify", level: "B2", meaning: "Kimliğini tespit etmek", synonym: "Recognize / Find", sentence: "The automated security system can instantly ___ multi-spectral faces in a crowd." },
+        { word: "Illustrate", level: "B2", meaning: "Örneklerle açıklamak", synonym: "Show / Explain", sentence: "Let me use this newly generated bar graph to ___ my academic point clearly." },
+        { word: "Independence", level: "B2", meaning: "Bağımsızlık", synonym: "Freedom / Liberty", sentence: "The historical colony fought bravely to establish its official political ___." },
+        { word: "Informed", level: "B2", meaning: "Bilgili, haberdar", synonym: "Knowledgeable / Aware", sentence: "An ___ and educated citizen makes significantly better choices during local elections." },
+        { word: "Infer", level: "B2", meaning: "Çıkarım yapmak", synonym: "Conclude / Understand", sentence: "From the long-term data pool, we can safely ___ a significant trend upward." },
+        { word: "Initial", level: "B2", meaning: "İlk, başlangıçtaki", synonym: "First / Primary", sentence: "Our ___ reaction to the engineering proposal was quite skeptical." },
+        { word: "Innovate", level: "B2", meaning: "Yenilik yapmak", synonym: "Create / Introduce", sentence: "To maintain their global edge, defense tech firms must continuously ___." },
+        { word: "Inquire", level: "B2", meaning: "Sormak, soruşturmak", synonym: "Ask / Question", sentence: "Corporate clients called the agency to ___ about the new pricing policy details." },
+        { word: "Insist", level: "B2", meaning: "Israr etmek, diretmek", synonym: "Demand / Persist", sentence: "The lead researchers firmly ___ that their experimental findings are fully accurate." },
+        { word: "In Case", level: "B2", meaning: "Durumunda, ihtimaline karşı", synonym: "If / In order to avoid", sentence: "Always keep a local hardware backup of your files ___ a severe system crash." },
+        { word: "Keep up with", level: "B2", meaning: "Hızına yetişmek", synonym: "Match / Stay equal", sentence: "It is exceptionally hard to ___ rapid global technological changes." },
+        { word: "Landscape", level: "B2", meaning: "Manzara, peyzaj", synonym: "View / Scenery", sentence: "The rugged volcanic ___ attracted thousands of international geological tourists." },
+        { word: "Launch", level: "B2", meaning: "Başlatmak, piyasaya sürmek", synonym: "Start / Introduce", sentence: "The pioneering aerospace company is preparing to ___ its new tactical defense drone." },
+        { word: "Measure", level: "B2", meaning: "Ölçmek / Önlem", synonym: "Size / Action", sentence: "The laboratory team must accurately ___ the chemical temperature at regular intervals." },
+        { word: "Misbehave", level: "B2", meaning: "Kötü davranmak", synonym: "Act badly / Offend", sentence: "Students who explicitly ___ during examinations will face immediate disciplinary action." },
+        { word: "Monitor", level: "B2", meaning: "İzlemek, gözlemlemek", synonym: "Watch / Check", sentence: "Advanced hyperspectral satellites continuously ___ illegal deforestation patterns from orbit." },
+        { word: "Murderer", level: "B2", meaning: "Katil", synonym: "Killer", sentence: "The high court sentenced the convicted ___ to life imprisonment without parole." },
+        { word: "Observation", level: "B2", meaning: "Gözlem", synonym: "Watching / Notice", sentence: "Empirical scientific progress relies heavily on systematic, controlled ___." },
+        { word: "Obvious", level: "B2", meaning: "Apaçık, belli", synonym: "Clear / Plain", sentence: "It is socioeconomically ___ that higher education leads to better job prospects." },
+        { word: "Offshore", level: "B2", meaning: "Kıyıdan uzak", synonym: "In the sea / Sea-based", sentence: "The technological nation is investing heavily in massive ___ wind farms." },
+        { word: "Outcome", level: "B2", meaning: "Sonuç, netice", synonym: "Result / Effect", sentence: "The final ___ of the close election deeply surprised political analysts." },
+        { word: "Paperback", level: "B2", meaning: "Karton kapaklı kitap", synonym: "Softcover book", sentence: "The textbook was published in both expensive hardcover and accessible ___ editions." },
+        { word: "Perceive", level: "B2", meaning: "Algılamak", synonym: "See / Notice", sentence: "Biological organisms ___ subtle changes in atmospheric temperature via sensory receptors." },
+        { word: "Permanent", level: "B2", meaning: "Kalıcı", synonym: "Lasting / Constant", sentence: "The structural damage to the primary server equipment turned out to be ___." },
+        { word: "Persuasive", level: "B2", meaning: "İkna edici", synonym: "Convincing", sentence: "The chief engineer delivered a highly ___ speech that fully convinced the board." },
+        { word: "Policy", level: "B2", meaning: "Politika, kural", synonym: "Rule / Strategy", sentence: "The university's strict academic ___ completely forbids any form of plagiarism." },
+        { word: "Proponent", level: "B2", meaning: "Taraftar, savunucu", synonym: "Supporter / Defender", sentence: "The prominent professor is a leading ___ of decentralized smart grid systems." },
+        { word: "Put together", level: "B2", meaning: "Bir araya getirmek", synonym: "Combine / Connect", sentence: "The appointed committee will quickly ___ a comprehensive solution report." },
+        { word: "Rebellious", level: "B2", meaning: "Asi, isyankar", synonym: "Disobedient / Wild", sentence: "The ___ faction strictly refused to follow the general's direct command." },
+        { word: "Reaction", level: "B2", meaning: "Tepki, reaksiyon", synonym: "Response / Reply", sentence: "His unexpected, sharp ___ surprised everyone sitting in the boardroom." },
+        { word: "Regard", level: "B2", meaning: "Saygıyla karşılamak", synonym: "Respect / Consider", sentence: "Most international literary critics ___ the author's first book as her ultimate masterpiece." },
+        { word: "Relevant", level: "B2", meaning: "İlgili, ilişkili", synonym: "Related / Connected", sentence: "Please make sure to only include strictly ___ professional info in your resume." },
+        { word: "Rely on", level: "B2", meaning: "Güvenmek, bel bağlamak", synonym: "Trust / Depend on", sentence: "Modern autonomous navigation systems heavily ___ constellations of GPS satellites." },
+        { word: "Reputation", level: "B2", meaning: "İtibar, ün", synonym: "Fame / Name", sentence: "The technical institute possesses an excellent international ___ for engineering." },
+        { word: "Resignation", level: "B2", meaning: "İstifa", synonym: "Leaving / Quitting", sentence: "The embattled politician announced his official ___ following the public scandal." },
+        { word: "Resistant", level: "B2", meaning: "Dirençli, dayanıklı", synonym: "Strong against / Hard", sentence: "This composite material is engineered to be highly ___ to water and deep scratches." },
+        { word: "Scenario", level: "B2", meaning: "Senaryo", synonym: "Situation / Plan", sentence: "Strategic analysts carefully simulated a worst-case ___ for the global financial market." },
+        { word: "Sector", level: "B2", meaning: "Sektör, alan", synonym: "Area / Field", sentence: "The aerospace and technology ___ is exponentially driving job growth in the city." },
+        { word: "Send off", level: "B2", meaning: "Oyundan atmak", synonym: "Dismiss / Remove", sentence: "The referee made an immediate decision to ___ the player for a dangerous foul." },
+        { word: "Sequel", level: "B2", meaning: "Devam filmi/kitabı", synonym: "Continuation / Follow-up", sentence: "Millions of global fans eagerly awaited the cinematic ___ to the sci-fi epic." },
+        { word: "Significance", level: "B2", meaning: "Önem, değer", synonym: "Importance / Value", sentence: "The calculated statistical ___ of the laboratory results was highly robust." },
+        { word: "Sincere", level: "B2", meaning: "Samimi, içten", synonym: "Honest / Real", sentence: "Please accept my most ___ apologies for the unexpected administrative delay." },
+        { word: "Somewhat", level: "B2", meaning: "Birazcık", synonym: "A little bit / Slightly", sentence: "The newly updated system architecture is ___ faster than the legacy version." },
+        { word: "Sophisticated", level: "B2", meaning: "Gelişmiş, sofistike", synonym: "Advanced / Intelligent", sentence: "Modern military forces deploy highly ___ radar and tracking systems." },
+        { word: "Speed camera", level: "B2", meaning: "Hız kamerası", synonym: "Radar", sentence: "The local municipality installed a digital ___ to effectively reduce traffic accidents." },
+        { word: "Struggle", level: "B2", meaning: "Mücadele etmek", synonym: "Fight / Try hard", sentence: "Many low-income families ___ to pay monthly rent due to soaring inflation." },
+        { word: "Substance", level: "B2", meaning: "Madde, cisim", synonym: "Material / Matter", sentence: "The analytical chemist carefully isolated the unknown crystalline ___ in the lab." },
+        { word: "Suspects", level: "B2", meaning: "Şüpheliler", synonym: "Accused people", sentence: "The metropolitan police detained three primary ___ for further interrogation." },
+        { word: "Swiping", level: "B2", meaning: "Ekranı kaydırmak", synonym: "Sliding / Moving", sentence: "App users spend hours everyday ___ through short-form content on networks." },
+        { word: "Take into account", level: "B2", meaning: "Hesaba katmak", synonym: "Consider / Think about", sentence: "Systems designers must always ___ explicit user experience feedback." },
+        { word: "Take over", level: "B2", meaning: "Devralmak", synonym: "Control / Gain power", sentence: "A large multinational tech corporation is planning to completely ___ the local firm." },
+        { word: "Technological advances", level: "B2", meaning: "Teknolojik gelişmeler", synonym: "Tech progress / Growth", sentence: "Recent ___ in neural computing have completely revolutionized medical care." },
+        { word: "Tendency", level: "B2", meaning: "Eğilim, meyil", synonym: "Habit / Lean", sentence: "Some individuals possess a genetic ___ to metabolize certain lipids slower." },
+        { word: "Trait", level: "B2", meaning: "Kişisel özellik", synonym: "Feature / Quality", sentence: "Unwavering honesty is universally considered an admirable character ___ in any leader." },
+        { word: "Unconsciously", level: "B2", meaning: "Bilinçsizce", synonym: "Without thinking", sentence: "Healthy human eyes often blink completely ___ throughout the waking day." },
+        { word: "Unplug", level: "B2", meaning: "Fişini çekmek", synonym: "Disconnect", sentence: "Remember to carefully ___ the heating appliances after you finish using them." },
+        { word: "Urgent", level: "B2", meaning: "Acil, önemli", synonym: "Immediate / Important", sentence: "The university hospital network issued an ___ call for plasma donations." },
+        { word: "Virtual classroom", level: "B2", meaning: "Sanal sınıf", synonym: "Online class", sentence: "A modern ___ seamlessly allows international students to learn from anywhere." },
+        { word: "Vital", level: "B2", meaning: "Hayati, çok önemli", synonym: "Crucial / Essential", sentence: "Dissolved oxygen is absolutely ___ for the survival of complex aquatic organisms." },
+        { word: "Willingness", level: "B2", meaning: "Gönüllülük", synonym: "Desire / Eagerness", sentence: "Her absolute ___ to acquire new programming skills deeply impressed the interviewer." },
+
+        // --- C1 ---
+        { word: "Aesthetic", level: "C1", meaning: "Estetik", synonym: "Beautiful / Artistic", sentence: "The post-modern skyscraper's architecture offers immense ___ appeal." },
+        { word: "Allocate", level: "C1", meaning: "Tahsis etmek, paylaştırmak", synonym: "Share / Give out", sentence: "The city council voted to strategically ___ funds for public park restoration." },
+        { word: "Analogous", level: "C1", meaning: "Benzer, paralel", synonym: "Similar / Alike", sentence: "The biological neural structure is structurally ___ to a complex computer system." },
+        { word: "As opposed to", level: "C1", meaning: "-in aksine, karşıt olarak", synonym: "Instead of / Unlike", sentence: "Scholars choose research careers based on passion, ___ monetary gain." },
+        { word: "Authenticity", level: "C1", meaning: "Özgünlük, orijinallik", synonym: "Reality / Truth", sentence: "Historians successfully verified the true ___ of the ancient manuscript." },
+        { word: "Automated", level: "C1", meaning: "Otomatikleştirilmiş", synonym: "Mechanical / Robotic", sentence: "The aerospace assembly line is completely ___ with high-precision robotics." },
+        { word: "Bring up", level: "C1", meaning: "Konu açmak / Çocuk büyütmek", synonym: "Mention / Raise", sentence: "Please do not ___ that highly controversial geopolitical topic during the seminar." },
+        { word: "Burden", level: "C1", meaning: "Yük, külfet", synonym: "Load / Trouble", sentence: "Soaring national debt places an immense financial ___ on future generations." },
+        { word: "Civilized", level: "C1", meaning: "Medeni, gelişmiş topluma yakışır", synonym: "Social / Developed", sentence: "A truly ___ global community ensures equal access to free higher education." },
+        { word: "Companion", level: "C1", meaning: "Arkadaş, yoldaş", synonym: "Friend / Partner", sentence: "The autonomous AI assistant proved to be an excellent cognitive ___." },
+        { word: "Concrete", level: "C1", meaning: "Somut / Beton", synonym: "Real / Solid", sentence: "We require verifiable, ___ evidence before making any formal legal accusation." },
+        { word: "Consumption", level: "C1", meaning: "Tüketim", synonym: "Use / Eating", sentence: "The excessive ___ of simple sugars leads directly to metabolic dysfunction." },
+        { word: "Convenience", level: "C1", meaning: "Kolaylık, rahatlık", synonym: "Comfort / Ease", sentence: "E-commerce apps offer unmatched operational ___ for modern busy consumers." },
+        { word: "Core principles", level: "C1", meaning: "Temel ilkeler", synonym: "Main rules / Basics", sentence: "The tech firm strictly operates based on its ___ of engineering integrity." },
+        { word: "Correlation", level: "C1", meaning: "Korelasyon, karşılıklı ilişki", synonym: "Connection / Link", sentence: "Statistical analysis shows a direct ___ between smoking and cell mutation." },
+        { word: "Cynical", level: "C1", meaning: "Kinik / Alaycı", synonym: "Negative / Doubting", sentence: "The veteran researcher has a somewhat ___ view of corporate-funded trials." },
+        { word: "Demographic", level: "C1", meaning: "Demografik", synonym: "Population sector", sentence: "The latest census ___ data clearly reveals an aging population macro trend." },
+        { word: "Destructive", level: "C1", meaning: "Yıkıcı, tahrip edici", synonym: "Damaging / Ruining", sentence: "Uncontrolled wildfires leave highly ___ long-term effects on local infrastructure." },
+        { word: "Discipline", level: "C1", meaning: "Disiplin / Bilim dalı", synonym: "Field / Control", sentence: "Quantum computing is an incredibly fascinating new academic ___ to specialize in." },
+        { word: "Distinction", level: "C1", meaning: "Ayrım, fark", synonym: "Difference / Contrast", sentence: "Philosophers argue there is a clear ___ between legal rights and moral duties." },
+        { word: "Evolve", level: "C1", meaning: "Evrilmek, gelişmek", synonym: "Develop / Grow", sentence: "Natural human languages ___ over centuries via complex cross-cultural interactions." },
+        { word: "Firsthand", level: "C1", meaning: "İlk elden", synonym: "Direct / Personal", sentence: "Conducting laboratory field research allows you to gain invaluable ___ experience." },
+        { word: "Gender gap", level: "C1", meaning: "Cinsiyet ayrımı", synonym: "Sex difference", sentence: "Strict policies were implemented globally to close the tech sector ___." },
+        { word: "Generate", level: "C1", meaning: "Üretmek, yaratmak", synonym: "Produce / Create", sentence: "Offshore wind turbines ___ clean electricity for millions of coastal homes." },
+        { word: "Inexhaustible", level: "C1", meaning: "Tükenmez, bitmek bilmez", synonym: "Endless / Unlimited", sentence: "Solar and kinetic energy are considered completely ___ global resources." },
+        { word: "Infrastructure", level: "C1", meaning: "Altyapı", synonym: "Base / System", sentence: "Investing heavily in transport ___ drastically accelerates nationwide trade velocity." },
+        { word: "Instigate", level: "C1", meaning: "Kışkırtmak, başlatmak", synonym: "Start / Cause", sentence: "The bad actors attempted to deliberately ___ a digital riot against the platform." },
+        { word: "Labor", level: "C1", meaning: "İş gücü, emek", synonym: "Work / Workforce", sentence: "Intensive manual ___ requires an exceptional degree of physical stamina." },
+        { word: "Merchandise", level: "C1", meaning: "Ticari mal, eşya", synonym: "Goods / Products", sentence: "The logistics warehouse stores a massive global range of electronic ___." },
+        { word: "Modern phenomenon", level: "C1", meaning: "Modern fenomen", synonym: "New trend / Fact", sentence: "Hyper-urbanization is a distinct ___ heavily driven by industrial concentration." },
+        { word: "Notion", level: "C1", meaning: "Kavram, fikir", synonym: "Idea / Belief", sentence: "Sociologists fiercely rejected the outdated ___ that intelligence is purely static." },
+        { word: "Oriented", level: "C1", meaning: "-e yönelik, odaklı", synonym: "Directed / Focused", sentence: "The technical institute offers highly career-___ engineering courses for students." },
+        { word: "Pension", level: "C1", meaning: "Emekli maaşı", synonym: "Retirement money", sentence: "The retired aerospace engineer lives comfortably on his monthly corporate ___." },
+        { word: "Perfectionist", level: "C1", meaning: "Mükemmeliyetçi", synonym: "Faultless seeker", sentence: "Being a chronic ___ can paradoxically lead to severe academic procrastination." },
+        { word: "Phenomenon", level: "C1", meaning: "Fenomen, olgu", synonym: "Event / Fact", sentence: "A total solar eclipse is a magnificent natural ___ to scientifically witness." },
+        { word: "Prodigy", level: "C1", meaning: "Deha, dahi çocuk", synonym: "Wonder child / Genius", sentence: "The mathematical ___ began solving advanced calculus proofs at age eight." },
+        { word: "Proportion", level: "C1", meaning: "Oran, orantı", synonym: "Rate / Share", sentence: "A significant ___ of the state R&D budget is directly allocated to defense tech." },
+        { word: "Pursue", level: "C1", meaning: "Peşinden koşmak", synonym: "Follow / Chase", sentence: "Top tier graduates often actively choose to ___ higher doctoral degrees abroad." },
+        { word: "Range", level: "C1", meaning: "Menzil, aralık, çeşitlilik", synonym: "Variety / Distance", sentence: "The operational pricing ___ of these engineering components varies significantly." },
+        { word: "Reflect on", level: "C1", meaning: "Üzerinde derinlemesine düşünmek", synonym: "Think about / Consider", sentence: "Graduate students should take time to deeply ___ their core research milestones." },
+        { word: "Relatively", level: "C1", meaning: "Nispeten, oranla", synonym: "Comparatively / Mostly", sentence: "The advanced certification exam was ___ straightforward compared to last year's." },
+        { word: "Secondhand", level: "C1", meaning: "İkinci el, başkasından duyma", synonym: "Used / Indirect", sentence: "Acquiring ___ laboratory textbooks is an excellent way to optimize budgets." },
+        { word: "Sector", level: "C1", meaning: "Sektör", synonym: "Part / Division", sentence: "The public banking ___ must strictly adhere to newly updated liquidity regulations." },
+        { word: "Selling point", level: "C1", meaning: "Satış noktası", synonym: "Advantage / Feature", sentence: "The primary ___ of this autonomous drone is its unparalleled flight time." },
+        { word: "Significant difference", level: "C1", meaning: "Belirgin fark", synonym: "Big change / Gap", sentence: "Data testing revealed a ___ between the two prototype engines." },
+        { word: "Specialty", level: "C1", meaning: "Uzmanlık alanı", synonym: "Expert field", sentence: "The senior software architect's core ___ is distributed microservice infrastructure." },
+        { word: "Strategy", level: "C1", meaning: "Strateji", synonym: "Plan / Method", sentence: "The executive board developed a comprehensive long-term corporate expansion ___." },
+        { word: "Supportive", level: "C1", meaning: "Destekleyici", synonym: "Helpful / Caring", sentence: "The academic department faculty members were incredibly ___ during my thesis." },
+        { word: "Take sides", level: "C1", meaning: "Taraf tutmak", synonym: "Support one part", sentence: "International arbitrators must always remain neutral and never ___." },
+        { word: "Tricky", level: "C1", meaning: "Aldatıcı, zor", synonym: "Hard / Complicated", sentence: "This particular English gerund exception can be exceptionally ___ to memorize." },
+        { word: "Turn upside down", level: "C1", meaning: "Tepetaklak etmek", synonym: "Ruin / Flip", sentence: "The sudden corporate restructuring completely turned the engineering team ___." },
+        { word: "Underrepresented", level: "C1", meaning: "Yetersiz temsil edilen", synonym: "Not enough shown" , sentence: "Historically, female researchers were deeply ___ in many complex STEM fields." },
+        { word: "Undertake", level: "C1", meaning: "Üstlenmek, sorumluluk almak", synonym: "Accept / Take on", sentence: "The experienced defense firm agreed to ___ the massive nationwide radar project." },
+        { word: "Universal", level: "C1", meaning: "Evrensel", synonym: "Global / General", sentence: "The fundamental desire for individual liberty is a ___ human characteristic." },
+        { word: "Utilize", level: "C1", meaning: "Yararlanmak", synonym: "Use / Make use of", sentence: "Advanced solar collectors efficiently ___ ambient sunlight to synthesize electricity." },
+        { word: "Voluntary", level: "C1", meaning: "Gönüllü", synonym: "Willing / Free", sentence: "Participation in the international scientific conference is entirely ___." },
+        { word: "Wear off", level: "C1", meaning: "Etkisi geçmek", synonym: "Fade / Decrease", sentence: "The primary physical effect of the clinical drug injection will slowly ___." },
+        { word: "Wholly", level: "C1", meaning: "Tamamen, bütünüyle", synonym: "Completely / Totally", sentence: "The plagiarism allegation proved to be ___ inaccurate upon formal investigation." },
+        { word: "With respect to", level: "C1", meaning: "-e gelince, bakımından", synonym: "About / Regarding", sentence: "The newly drafted environmental law is highly progressive ___ carbon emissions." }
+    ];
+
+    let gamePhase = 1; 
+    let wordList = rawWords.map(w => ({ ...w, scoreMeaning: 0, scoreSynonym: 0, scoreSentence: 0 }));
+    let currentWordObj = null;
+    let answered = false;
+
+    function initGame() {
+        let activeWords = wordList.filter(w => {
+            if (gamePhase === 1) return w.scoreMeaning < 2;
+            if (gamePhase === 2) return w.scoreSynonym < 2;
+            if (gamePhase === 3) return w.scoreSentence < 2;
+        });
+        
+        if (activeWords.length === 0) {
+            if (gamePhase === 1) {
+                showTransitionScreen(2, "Muhteşem! Türkçe anlamlar bitti. Şimdi zorluk seviyesini artırıyoruz: <b>Bölüm 2: İngilizce Eş Anlamlı (Synonym) Eşleştirme</b> başlıyor!");
+                return;
+            } else if (gamePhase === 2) {
+                showTransitionScreen(3, "Harika Gidiyorsun! Eş anlamlıları da temizledin. Şimdi en prestijli bölüme geldik: <b>Bölüm 3: Akademik Cümle Boşluk Doldurma</b> başlıyor!");
+                return;
+            } else {
+                document.getElementById("game-zone").classList.add("hidden");
+                document.getElementById("win-zone").classList.remove("hidden");
+                return;
+            }
+        }
+
+        document.getElementById("remaining-count").innerText = `Kalan Kelime: ${activeWords.length}`;
+        document.getElementById("next-btn").classList.add("hidden");
+        document.getElementById("feedback").innerText = "";
+        answered = false;
+
+        currentWordObj = activeWords[Math.floor(Math.random() * activeWords.length)];
+        
+        const wordDisplay = document.getElementById("current-word");
+        if (gamePhase === 3) {
+            wordDisplay.innerText = currentWordObj.sentence;
+            wordDisplay.style.fontSize = "18px";
+            wordDisplay.style.lineHeight = "1.5";
+            wordDisplay.style.fontWeight = "500";
+        } else {
+            wordDisplay.innerText = currentWordObj.word;
+            wordDisplay.style.fontSize = "28px";
+            wordDisplay.style.fontWeight = "bold";
+        }
+
+        document.getElementById("level-tag").innerText = currentWordObj.level;
+        
+        let badgeColor = "#95a5a6";
+        if(currentWordObj.level === "A1") badgeColor = "#f1c40f";
+        else if(currentWordObj.level === "A2") badgeColor = "#e67e22";
+        else if(currentWordObj.level === "B1") badgeColor = "#3498db";
+        else if(currentWordObj.level === "B2") badgeColor = "#9b59b6";
+        else if(currentWordObj.level === "C1") badgeColor = "#e74c3c";
+        document.getElementById("level-tag").style.backgroundColor = badgeColor;
+        
+        let currentScore = gamePhase === 1 ? currentWordObj.scoreMeaning : (gamePhase === 2 ? currentWordObj.scoreSynonym : currentWordObj.scoreSentence);
+        document.getElementById("word-streak").innerText = `Seri: ${currentScore}/2`;
+
+        generateOptions();
+    }
+
+    function generateOptions() {
+        let targetAnswer = "";
+        if (gamePhase === 1) targetAnswer = currentWordObj.meaning;
+        else if (gamePhase === 2) targetAnswer = currentWordObj.synonym;
+        else if (gamePhase === 3) targetAnswer = currentWordObj.word;
+
+        let options = [targetAnswer];
+        
+        let allAnswers = rawWords.map(w => {
+            if (gamePhase === 1) return w.meaning;
+            if (gamePhase === 2) return w.synonym;
+            if (gamePhase === 3) return w.word;
+        }).filter(val => val !== targetAnswer);
+        
+        let uniqueWrongAnswers = [...new Set(allAnswers)];
+        
+        while (options.length < 5 && uniqueWrongAnswers.length > 0) {
+            let randIdx = Math.floor(Math.random() * uniqueWrongAnswers.length);
+            options.push(uniqueWrongAnswers.splice(randIdx, 1)[0]);
+        }
+
+        options.sort(() => Math.random() - 0.5);
+
+        const optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+        const labels = ['A', 'B', 'C', 'D', 'E'];
+
+        options.forEach((opt, idx) => {
+            let btn = document.createElement("button");
+            btn.className = "btn-option";
+            btn.innerText = `${labels[idx]}) ${opt}`;
+            btn.onclick = () => checkAnswer(btn, opt, targetAnswer);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedBtn, selectedValue, targetAnswer) {
+        if (answered) return;
+        answered = true;
+
+        const optionsDiv = document.getElementById("options");
+        const buttons = optionsDiv.getElementsByClassName("btn-option");
+        const feedbackDiv = document.getElementById("feedback");
+
+        if (selectedValue === targetAnswer) {
+            selectedBtn.classList.add("correct");
+            
+            if (gamePhase === 1) currentWordObj.scoreMeaning++;
+            else if (gamePhase === 2) currentWordObj.scoreSynonym++;
+            else if (gamePhase === 3) currentWordObj.scoreSentence++;
+            
+            let currentScore = gamePhase === 1 ? currentWordObj.scoreMeaning : (gamePhase === 2 ? currentWordObj.scoreSynonym : currentWordObj.scoreSentence);
+
+            feedbackDiv.style.color = "#2ecc71";
+            if (currentScore === 2) {
+                feedbackDiv.innerText = "Mükemmel! Üst üste 2 kez bildin ve bu kelimeyi bu bölüm için eledin! 🎉";
+            } else {
+                feedbackDiv.innerText = "Harika, doğru cevap! Kelimeyi kalıcı temizlemek için 1 kez daha bilmelisin.";
+            }
+        } else {
+            selectedBtn.classList.add("wrong");
+            
+            if (gamePhase === 1) currentWordObj.scoreMeaning = 0;
+            else if (gamePhase === 2) currentWordObj.scoreSynonym = 0;
+            else if (gamePhase === 3) currentWordObj.scoreSentence = 0;
+            
+            feedbackDiv.style.color = "#e74c3c";
+            feedbackDiv.innerText = `Yanlış! Doğru cevap: "${targetAnswer}" olmalıydı.`;
+
+            for (let btn of buttons) {
+                if (btn.innerText.substring(3) === targetAnswer) {
+                    btn.classList.add("correct");
+                }
+            }
+        }
+
+        document.getElementById("next-btn").classList.remove("hidden");
+    }
+
+    function nextQuestion() {
+        initGame();
+    }
+
+    function showTransitionScreen(nextPhase, textText) {
+        document.getElementById("trans-desc").innerHTML = textText;
+        document.getElementById("trans-btn").setAttribute("data-next", nextPhase);
+        document.getElementById("transition-zone").classList.remove("hidden");
+    }
+
+    function proceedToNextPhase() {
+        let next = parseInt(document.getElementById("trans-btn").getAttribute("data-next"));
+        gamePhase = next;
+        document.getElementById("transition-zone").classList.add("hidden");
+        
+        let titleObj = document.getElementById("phase-title");
+        if (gamePhase === 2) {
+            titleObj.innerText = "Bölüm 2: İngilizce Eş Anlamlı (Synonym) Eşleştirme";
+            titleObj.style.color = "#2980b9";
+            titleObj.style.backgroundColor = "#eaf2f8";
+        } else if (gamePhase === 3) {
+            titleObj.innerText = "Bölüm 3: Akademik Cümle Boşluk Doldurma";
+            titleObj.style.color = "#8e44ad";
+            titleObj.style.backgroundColor = "#f5eef8";
+        }
+        initGame();
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
